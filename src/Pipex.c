@@ -6,7 +6,7 @@
 /*   By: auzochuk <auzochuk@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/10/26 02:01:22 by auzochuk      #+#    #+#                 */
-/*   Updated: 2022/10/26 21:03:48 by auzochuk      ########   odam.nl         */
+/*   Updated: 2022/10/31 17:10:49 by auzochuk      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,13 +19,9 @@ char	*find_command(t_pepe *pipex, char *argv)
 	char	*ret_str;
 	char	*tmp;
 
-	
 	i = 0;
-	write(2, "in fc: ", 7);
-	write(2, argv, ft_strlen(argv));
-	write(2, "\n", 1);
 	if (access(argv, X_OK) == 0)
-		return(argv);
+		return (argv);
 	while (pipex->paths && pipex->paths[i])
 	{
 		tmp = ft_strjoin(pipex->paths[i], "/");
@@ -35,9 +31,8 @@ char	*find_command(t_pepe *pipex, char *argv)
 		free (ret_str);
 		i++;
 	}
-	perror("invalid arguement"); //command not found
+	write(2, "invalid arguement", 18);
 	exit (127);
-	// return("/bin/cat");
 }
 
 void	first_child(t_pepe pipex, char *command, char *envp[])
@@ -72,8 +67,6 @@ void	last_child(t_pepe pipex, char *command, char *envp[])
 	close (1);
 	dup2(pipex.fd[1], STDOUT);
 	why = ft_split(command, ' ');
-	write(2, why[0], ft_strlen(why[0]));
-	write(2, "\n", 1);
 	cmd = find_command(&pipex, why[0]);
 	execve(cmd, why, envp);
 }
@@ -83,24 +76,24 @@ int	ft_fillstruct(char **envp, t_pepe *pipex)
 	int	i;
 
 	i = 0;
-	while (envp[i] && ft_strncmp("PATH", envp[i], 4) != 0)
+	while (envp[i] && ft_strncmp("PATH=", envp[i], 5) != 0)
 		i++;
 	if (envp[i])
 		pipex->paths = ft_split (envp[i] + 5, ':');
 	if (pipe(pipex->pair) == -1)
-		return (0);
+		exit(-1);
 	pipex->fd[0] = pipex->pair[0];
 	pipex->fd[1] = pipex->pair[1];
-	return (1);
+	return (0);
 }
 
 int	main(int argc, char *argv[], char *envp[])
 {
 	t_pepe	pipex;
-	
+
 	if (argc != 5)
 	{
-		write(2, "Invalid amount of arguments\n", 28);
+		write(2, "Invalid amount of arguments\n", 29);
 		exit(1);
 	}
 	pipex.fdout = open(argv[argc - 1], O_RDWR | O_CREAT | O_TRUNC, 0644);
@@ -115,9 +108,11 @@ int	main(int argc, char *argv[], char *envp[])
 		perror ("Infile");
 		exit (1);
 	}
-	if (ft_fillstruct(envp, &pipex) == 0)
-		return (0);
+	if (ft_fillstruct(envp, &pipex) == 1)
+		return (1);
 	first_child(pipex, argv[2], envp);
 	last_child(pipex, argv[3], envp);
-	return(0);
+	while (--i > 0)
+		waitpid(0, NULL, 0)
+	exit (0);
 }
